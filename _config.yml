@@ -1,25 +1,25 @@
 lang: en
-title: openSUSE Template
-title_short: Template
+title: Egbert's openSUSE Blog
+title_short: Egbert's Blog
 description: Template for openSUSE Websites
-email: admin@opensuse.org
-copyright: '© 2021 openSUSE contributors'
+email: eich@suse.com
+copyright: '© 2023 openSUSE contributors'
 baseurl: ""
-url: "https://template.opensuse.org"
-github_url: "https://github.com/openSUSE/jekyll-template"
+url: "https://e4t.github.io/"
+github_url: "https://github.com/e4t/e4t.github.io"
 
 navbar_links:
   -
     link: https://www.opensuse.org/
-    text: Absolute Link 1
-  -
-    link: /about/
-    text: Relative Link 2
+    text: openSUSE.org
+#  -
+#    link: /about/
+#    text: Relative Link 2
 
 footer_links:
-  -
-    text: Source Code
-    link: https://github.com/openSUSE/jekyll-template
+#  -
+#    text: Source Code
+#    link: https://github.com/openSUSE/jekyll-template
   -
     text: License
     link: https://github.com/openSUSE/jekyll-template/blob/master/COPYING
