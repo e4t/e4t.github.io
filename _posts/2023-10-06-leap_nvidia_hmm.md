@@ -1,11 +1,10 @@
 ---
 layout: post
 title:  "Simplify GPU Application Development with HMM on Leap"
-date:   023-10-06
-categories: nvidia, hmm, cuda
+date:   2023-10-06
+categories: nvidia hmm cuda
+author: Christian Goll, Egbert Eich
 ---
-
-Authors: Christian Goll, Egbert Eich
 
 Recently, NVIDIA has introduced Heterogeneous Memory Management (HMM)
 in its [open source kernel drivers](https://github.com/NVIDIA/open-gpu-kernel-modules/)

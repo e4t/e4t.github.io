@@ -1,12 +1,13 @@
-lang: en
+# lang: en
 title: Egbert's openSUSE Blog
 title_short: Egbert's Blog
-description: Template for openSUSE Websites
+description: Egbert's openSUSE Blog
 email: eich@suse.com
 copyright: '© 2023 openSUSE contributors'
 baseurl: ""
-url: "https://e4t.github.io/"
+url: "https://e4t.github.io"
 github_url: "https://github.com/e4t/e4t.github.io"
+github_username:  eeich
 
 navbar_links:
   -
@@ -47,5 +48,7 @@ disable_search: true
 
 remote_theme: openSUSE/jekyll-theme
 markdown: kramdown
+plugins:
+  - jekyll-feed
 
 exclude: [README.md, Gemfile, Gemfile.lock, vendor]
