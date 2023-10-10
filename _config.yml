@@ -7,7 +7,7 @@ copyright: '© 2023 openSUSE contributors'
 baseurl: ""
 url: "https://e4t.github.io"
 github_url: "https://github.com/e4t/e4t.github.io"
-github_username:  eeich
+github_username:  e4t
 
 navbar_links:
   -
@@ -21,7 +21,10 @@ footer_links:
 #  -
 #    text: Source Code
 #    link: https://github.com/openSUSE/jekyll-template
-  -
+-
+    text: RSS Feed
+    link: feed.xml
+-
     text: License
     link: https://github.com/openSUSE/jekyll-template/blob/master/COPYING
 
