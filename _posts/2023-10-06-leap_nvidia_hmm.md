@@ -8,7 +8,8 @@ author: Christian Goll, Egbert Eich
 
 Recently, NVIDIA has introduced Heterogeneous Memory Management (HMM)
 in its [open source kernel drivers](https://github.com/NVIDIA/open-gpu-kernel-modules/)
-which [simplifies GPU Application Development](https://developer.nvidia.com/blog/simplifying-gpu-application-development-with-heterogeneous-memory-management/).
+which [simplifies GPU Application Development](https://developer.nvidia.com/blog/simplifying-gpu-application-development-with-heterogeneous-memory-management/)
+with CUDA.
 It unifies system memory access across CPUs and GPUs and removes the
 need to copy memory content between CPU and GPU memory.
 It extends Unified Memory to cover both system allocated memory as well
@@ -50,7 +51,7 @@ packages which are not yet available in the CUDA software repository.
 
 For chipsets with a display engine (i.e. which have display outputs), the open driver
 support is still considered alpha. Therefore, you may have to add or uncomment
-the following option in /etc/modprobe.d/50-nvidia-default.conf:
+the following option in `/etc/modprobe.d/50-nvidia-default.conf`:
 ```
 options nvidia NVreg_OpenRmEnableUnsupportedGpus=1
 ```
@@ -73,7 +74,7 @@ If you see above output, HMM is available on your system.
 
 NVIDIA discusses some code examples for HMM in its [blog
 post](https://developer.nvidia.com/blog/simplifying-gpu-application-development-with-heterogeneous-memory-management/).
-The examples are stored in [github](https://github.com/NVIDIA/HMM_sample_code). If you
+The examples can be found here on [GitHub](https://github.com/NVIDIA/HMM_sample_code). If you
 would like to try out the examples, here are some hints on building and running them.  
 Some these need a newer gcc than the stock version shipped with Leap 15,
 which you can install with:
@@ -111,7 +112,7 @@ make
 The [blog by NVIDIA](https://developer.nvidia.com/blog/simplifying-gpu-application-development-with-heterogeneous-memory-management/)
 describes how to obtain the data required to run the app.
 If you're unable to download the ~1.3 TB of data, you may also use the random data generator from
-this [PR on github](https://github.com/NVIDIA/HMM_sample_code/pull/3).
+this [PR on GitHub](https://github.com/NVIDIA/HMM_sample_code/pull/3).
 The random data app can be compiled with
 ```
 g++ create_random_data.cpp -o create_random_data -O2 -Wall
