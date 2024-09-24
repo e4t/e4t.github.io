@@ -109,11 +109,11 @@ installation is sufficient and even preferred).
    export CRI_CONFIG_FILE=/var/lib/rancher/rke2/agent/etc/crictl.yaml
    EOF
    ```
-4.  Now enable and start the `rke2-server` service:
-	```
-	systemctl enable --now rke2-server
-	```
-	With this, the installation is completed.
+4. Now enable and start the `rke2-server` service:
+   ```
+   systemctl enable --now rke2-server
+   ```
+   With this, the installation is completed.
 5. To check is all pods have come up properly and are running of have
    completed successfully, run:
    ```
@@ -159,11 +159,11 @@ you want to install as an agent.
    kubectl get nodes
    ```
    in the server machine. The output should look something like this:
-	```
-	NAME     STATUS   ROLES                       AGE    VERSION
-	node01   Ready    control-plane,etcd,master   12m   v1.30.4+rke2r1
-	node02   Ready    <none>                      5m    v1.30.4+rke2r1
-	```
+   ```
+   NAME     STATUS   ROLES                       AGE    VERSION
+   node01   Ready    control-plane,etcd,master   12m   v1.30.4+rke2r1
+   node02   Ready    <none>                      5m    v1.30.4+rke2r1
+   ```
 
 # Deploying the GPU Operator
 
@@ -248,8 +248,8 @@ will be installed on any node that has a GPU installed.
    ```
    Also, run:
    ```
-	# kubectl logs -n gpu-operator -l app=nvidia-cuda-validator
-	```
+   # kubectl logs -n gpu-operator -l app=nvidia-cuda-validator
+   ```
    which should result in:
    ```
    Defaulted container "nvidia-cuda-validator" out of: nvidia-cuda-validator, cuda-validation (init)
