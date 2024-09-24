@@ -1,6 +1,6 @@
 ---
 layout: post
-title:  "Installing NVIDIA CUDA on Leap"
+title:  "Installing the NVIDIA GPU Operator on Kubernetes on openSUSE Leap"
 date:   2024-09-24
 categories: nvidia cuda K8s RKE2 nvidia-gpu-operator leap
 author: Egbert Eich
