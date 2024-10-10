@@ -275,7 +275,7 @@ wwctl overlay create rke2-agent
 ```
 Create a configuration template which we will later import
 into the overlay:
-```
+~~~
 cat > /tmp/config.yaml.ww <<EOF
 {{ if ne (index .Tags "server") "" -}}
 server: https://{{ index .Tags "server" }}:9345
@@ -284,7 +284,7 @@ server: https://{{ index .Tags "server" }}:9345
 token: {{ index .Tags "clienttoken" }}
 {{ end -}}
 EOF
-```
+~~~
 This template will create a `server:` entry pointing to the
 communication endpoint (address & port) of the K8s server
 and a `token:` which will hold the client token in case
