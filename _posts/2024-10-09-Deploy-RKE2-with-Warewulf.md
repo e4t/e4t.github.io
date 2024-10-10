@@ -111,7 +111,7 @@ install and enable `rke2-server` and adjust the environment for RKE2:
 ```
 # Install the RKE2 tarball and prepare for server start
 cd /root
-INSTALL_RKE2_SKIP_RELOAD=true sh rke2.sh
+INSTALL_RKE2_SKIP_RELOAD=true INSTALL_RKE2_VERSION="v1.31.1+rke2r1" sh rke2.sh
 # Enable the service so it comes up later
 systemctl enable rke2-server
 # For many scenarios we want `helm`
@@ -123,6 +123,9 @@ export KUBECONFIG=/etc/rancher/rke2/rke2.yaml
 export CRI_CONFIG_FILE=/var/lib/rancher/rke2/agent/etc/crictl.yaml
 EOF
 ```
+We are pinning the version to the one this has been tested
+with. If we omit `INSTALL_RKE2_VERSION=...` we will get the
+[latest version](https://github.com/rancher/rke2/releases).
 Now, we exit the shell in the server container and again make sure the
 image is rebuilt.
 
@@ -247,9 +250,16 @@ wwctl container shell leap15.6-RKE2
 and run:
 ```
 cd /root
-INSTALL_RKE2_SKIP_RELOAD=true INSTALL_RKE2_TYPE="agent" sh rke2.sh
+INSTALL_RKE2_SKIP_RELOAD=true INSTALL_RKE2_TYPE="agent" \
+ INSTALL_RKE2_VERSION="v1.31.1+rke2r1" sh rke2.sh
 systemctl enable rke2-agent
 ```
+Here, we are pinning the RKE2 version to the version this has
+been tested with. This has to match the version of the server
+node. If the server node has not been deployed using Warewulf,
+we need to make sure its version matches the version used here.
+If we omit `INSTALL_RKE2_VERSION=...` we will get the
+[latest version](https://github.com/rancher/rke2/releases).
 When logging out, we make sure, the container image is rebuilt.
 
 Since the K8s agents needs the client token from the K8s Server,
