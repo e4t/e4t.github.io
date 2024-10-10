@@ -50,7 +50,8 @@ defaults:
 disable_search: true
 
 remote_theme: openSUSE/jekyll-theme
-markdown: kramdown
+#markdown: kramdown
+markdown: GFM
 plugins:
   - jekyll-feed
 
