@@ -130,8 +130,8 @@ Now, we exit the shell in the server container and again make sure the
 image is rebuilt.
 
 ## Setting up the Nodes
-At this point, we perform the common setup for all nodes, i.e. the Agents and
-- if applicable - the Server. We assume, these nodes are known to Warewulf
+At this point, we perform the common setup for all nodes, i.e. the Agents
+and - if applicable - the Server. We assume, these nodes are known to Warewulf
 already. To learn how to do this, check [this post](https://mslacken.github.io/2024/03/26/install-wartewulf4.html).
 
 ### Switch to `tmpfs`
