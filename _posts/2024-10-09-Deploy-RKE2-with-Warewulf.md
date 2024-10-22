@@ -86,7 +86,7 @@ Then we install the packages required to perform the setup:
 ```
 zypper -n in -y --no-recommends ignition gptfdisk
 ```
-### Preparing the Image for the K8s Server
+### Prepare the Image for the K8s Server
 Now, we are done with the common setup. We can exit the shell session
 in the container. When doing so, we need to make sure, the container
 image is rebuilt. We should see a message:
@@ -129,12 +129,73 @@ with. If we omit `INSTALL_RKE2_VERSION=...` we will get the
 Now, we exit the shell in the server container and again make sure the
 image is rebuilt.
 
-## Setting up the Nodes
-At this point, we perform the common setup for all nodes, i.e. the Agents
-and - if applicable - the Server. We assume, these nodes are known to Warewulf
-already. To learn how to do this, check [this post](https://mslacken.github.io/2024/03/26/install-wartewulf4.html).
 
-### Switch to `tmpfs`
+### Prepare the Image for the K8s Agents
+We need to finalize the agent image by downloading and installing
+RKE2 and enabling the `rke2-agent` service. For this, we log
+into the container
+```
+wwctl container shell leap15.6-RKE2
+```
+and run:
+```
+cd /root
+INSTALL_RKE2_SKIP_RELOAD=true INSTALL_RKE2_TYPE="agent" \
+ INSTALL_RKE2_VERSION="v1.31.1+rke2r1" sh rke2.sh
+systemctl enable rke2-agent
+```
+Here, we are pinning the RKE2 version to the version this has
+been tested with. This has to match the version of the server
+node. If the server node has not been deployed using Warewulf,
+we need to make sure its version matches the version used here.
+If we omit `INSTALL_RKE2_VERSION=...` we will get the
+[latest version](https://github.com/rancher/rke2/releases).
+When logging out, we make sure, the container image is rebuilt.
+
+## Set up a Configuration Template for RKE2
+Since the K8s agents and servers need a shared secret - the connection
+token - and secondary nodes need information about the primary server
+to connect, we set up a warewulf configuration overlay template for
+these.  
+We vreate a new overlay `rke2-config` on the Warewulf deployment
+server by running:
+```
+wwctl overlay create rke2-config
+```
+create a configuration template
+<!-- {% raw %} -->
+```
+cat > /tmp/config.yaml.ww <<EOF
+{{ if ne (index .Tags "server") "" -}}
+server: https://{{ index .Tags "server" }}:9345
+{{ end -}}
+{{ if ne (index .Tags "clienttoken") "" -}}
+token: {{ index .Tags "connectiontoken" }}
+{{ end -}}
+EOF
+```
+<!-- {% endraw %} -->
+and import it into the overlay setting its owner and permission:
+```
+wwctl overlay import --parents rke2-agent /tmp/config.yaml.ww /etc/rancher/rke2/config.yaml.ww
+wwctl overlay chown rke2-agent /etc/rancher/rke2/config.yaml.ww 0
+wwctl overlay chmod rke2-agent /etc/rancher/rke2/config.yaml.ww 0600
+```
+This template will create a `server:` entry pointing to the
+communication endpoint (address & port) of the primary K8s server
+and a `token:` which will hold the client token in case
+these entries exist in the configuration of the node or
+one of its profiles. (These templates use the [Golang text/template
+engine](https://pkg.go.dev/text/template). Also, check the
+[upstream documentation](https://warewulf.org/docs/main/contents/templating.html)
+for the template file syntax.)  
+
+## Set up Profiles
+At this point, we create some profiles which we will use for setting
+up all node, i.e. the Agents and - if  applicable - the Server. To
+simplify things, we assume the hardware for all the nodes is identical.
+
+### The 'Switch to `tmpfs`' Profile
 Container runtimes require `pivot_root()` to work, which is not possible
 as long as we are still running out of a rootfs. This is not only the case
 for K8s but also for podman. Since the default init process in a Warewulf
@@ -148,10 +209,9 @@ We do this by setting up a profile for container hosts:
 wwctl profile add container-host
 wwctl profile set --root=tmpfs -A "crashkernel=no net.ifnames=1 rootfstype=ramfs" container-host
 ```
-(Here, `crashkernel=no net.ifnames=1` are the default kernel arguments.)  
-We will add this profile to the nodes later.
+(Here, `crashkernel=no net.ifnames=1` are the default kernel arguments.)
 
-## Setting up Container Storage
+### Set up the Container Storage Profile
 As stated above, this step is optional but recommended.  
 To set up storage on the nodes, the deployment images need to be
 prepared as describe above in section 'Image Preparation for
@@ -175,35 +235,78 @@ use. If the disks are not empty initially, we should set the option
 consecutive boot, therefore, we may want to unset this later.
 `--partcreate` makes sure, the partition is created
 if it doesn't exist. Most other arguments should be self-explanatory.
+If we need to set up the machines multiple times and want to make sure
+the disks are wiped each time, we should not rely on the `--diskwipe`
+option which in fact only wipes the partition table: if an identical
+partion table is recreated, `ignition` will not notice and reuse the
+partition from a previous setup.
 
-## Configuring, Starting and Testing the K8s Server
+### Set up the Connection Token Profile
+RKE2 allows to configure a connection token to both Servers and Agents.
+If none is provided to the primary server it will be generated internally.
+ If we set up the server persistently, we need to create a file
+ `/etc/rancher/rke2/config.yaml` with the content:
+```
+token: <connection_token>
+```
+before we start this server for the first time, or if the server has been
+started before already, we need to obtain the token from the file
+`/var/lib/rancher/rke2/server/node-token` on this machine and use it
+for the `token` variable below.
+We now run:
+```
+wwctl profile add rke2-config-key
+```
+generate the token, add the `rke2-config` overlay to the profile and
+set a tag containing the token that will later be used by the profile:
+```
+token="$(printf 'K'; \
+         for n in {1..20}; do printf %x $RANDOM; done; \
+         printf "::server:"; \
+         for n in {1..20}; do printf %x $RANDOM; done)"
+wwctl profile set --tagadd="connectiontoken=${token}" \
+              -O rke2-config rke2-config-key
+```
+### Set up the 'First Server' Profile
+This profile is used to point the agents (and secondary servers)
+to the initial server:
+```
+wwctl profile add rke2-config-first-server
+wwctl profile set --tagadd="server=${server}" -O rke2-config rke2-config-first-server
+```
+
+## Start the Nodes
+With these profiles in place, we are now able to set up and boot all
+machine roles.
+
+## Start and Test the first K8s Server
 If we use Warewulf to also deploy the K8s server, we need to start it now and
 make sure it is running correctly before we proceed to start the nodes.
 Otherwise, we assume a server is running already which we can connect
-via ssh without password and proceed to the next section.
+via ssh and proceed to the next section.
 
 It's assumed that we have already performed a basic setup of the server
 node (like make its MAC and designated IP address known to Warewulf).
-We need to complete the setup of the server before we can boot it.
-This includes adding the `container-host` and `container-storage`
-profiles we've created earlier to the server and set its container image:
+First we add the configuration profiles to the server. This includes
+the `container-host` and `container-storage` as well as the `rke2-config-key`
+profiles. We also set the container image:
 ```
-wwctl node set -P default,container-host,container-storage -C leap15.6-RKE2-server <server_node>
+wwctl node set -P default,container-host,container-storage,rke2-config-key -C leap15.6-RKE2-server <server_node>
 ```
 Finally, we build the overlays:
 ```
 wwctl overlay build <server_node>
 ```
 
-Now, we are ready to power on the server and wait until is has booted to log
-into it via `ssh`.  Once logged in we can see the RKE2 server
+Now, we are ready to power on the server and wait until is has booted. Once
+this is the case, We log into it via `ssh`. There we can observe the RKE2 server
 service starting:
 ```
 systemctl status rke2-server
 ```
 The output will show `containerd`, `kubelet` and several instances of runc
-(`containerd-shim-runc-v2`) running. When the initial containers have started,
-the output should contain the lines:
+(`containerd-shim-runc-v2`) running. When the initial containers have
+completed starting, the output should contain the lines:
 ```
 Oct 07 16:36:36 dell04 rke2[1299]: time="2024-10-07T16:36:36Z" level=info
 msg="Labels and annotations have been set successfully on node: k8s-server"
@@ -238,112 +341,33 @@ kube-system   rke2-metrics-server-868fc8795f-gz6pz                    1/1     Ru
 kube-system   rke2-snapshot-controller-7dcf5d5b46-8lp8w               1/1     Running     0          19m
 kube-system   rke2-snapshot-validation-webhook-bf7bbd6fc-p6mf9        1/1     Running     0          19m
 ```
-This server is now ready to accept further agents.
+This server is now ready to accept agents (and secondary servers). If we
+require additional servers for redundancy, their setup is identical, however,
+we will need to add the `rke2-config-first-server` profile when setting up
+the node above.
 
-## Preparing, starting and verifying the Agent
-We need to finalize the agent image by downloading and installing
-RKE2 and enabling the `rke2-agent` service. For this, we log
-into the container
+## Start and verify the Agent
+Now, we are ready to bring up the agents. First, we set up the nodes by
+adding the profiles `container-host`, `container-storage`,
+`rke2-config-key` and `rke2-config-first-server` to all the client nodes:
 ```
-wwctl container shell leap15.6-RKE2
+agents=<agent_nodes>
+wwctl node set -P default,container-host,rke2-agent,container-storage $agents
 ```
-and run:
+as well as the container image for the agent:
 ```
-cd /root
-INSTALL_RKE2_SKIP_RELOAD=true INSTALL_RKE2_TYPE="agent" \
- INSTALL_RKE2_VERSION="v1.31.1+rke2r1" sh rke2.sh
-systemctl enable rke2-agent
-```
-Here, we are pinning the RKE2 version to the version this has
-been tested with. This has to match the version of the server
-node. If the server node has not been deployed using Warewulf,
-we need to make sure its version matches the version used here.
-If we omit `INSTALL_RKE2_VERSION=...` we will get the
-[latest version](https://github.com/rancher/rke2/releases).
-When logging out, we make sure, the container image is rebuilt.
-
-Since the K8s agents needs the client token from the K8s Server,
-we assume the server node is already running. Since we need to
-configure the server address and client token on each agent,
-but this data may change in the future, we will include a template
-for this configuration in an agent-specfic overlay
-`rke-agent` and add this overlay to a profile we also call
-`rke2-agent` (note, that the name identity is purely by choice).
-Create a new overlay:
-```
-wwctl overlay create rke2-agent
-```
-Create a configuration template which we will later import
-into the overlay:
-<!-- {% raw %} -->
-```
-cat > /tmp/config.yaml.ww <<EOF
-{{ if ne (index .Tags "server") "" -}}
-server: https://{{ index .Tags "server" }}:9345
-{{ end -}}
-{{ if ne (index .Tags "clienttoken") "" -}}
-token: {{ index .Tags "clienttoken" }}
-{{ end -}}
-EOF
-```
-<!-- {% endraw %} -->
-This template will create a `server:` entry pointing to the
-communication endpoint (address & port) of the K8s server
-and a `token:` which will hold the client token in case
-these entries exist in the configuration of the node or
-one of its profiles. (These templates use the [Golang text/template
-engine](https://pkg.go.dev/text/template). Also, check the
-[upstream documentation](https://warewulf.org/docs/main/contents/templating.html)
-for the template file syntax.)  
-Now, import it into the overlay and set its owner and permission:
-```
-wwctl overlay import --parents rke2-agent /tmp/config.yaml.ww /etc/rancher/rke2/config.yaml.ww
-wwctl overlay chown rke2-agent /etc/rancher/rke2/config.yaml.ww 0
-wwctl overlay chmod rke2-agent /etc/rancher/rke2/config.yaml.ww 0600
-```
-Now, we are ready to create the profile - which we will call
-`rke2-agent` as well:
-```
-wwctl profile add rke2-agent
-```
-add the overlay:
-```
-wwctl profile set -O rke2-agent rke2-agent
-```
-set the container image for the nodes:
-```
-wwctl profile set -C leap15.6-RKE2 rke2-agent
-```
-set the server name and client token tag that we are using
-in the template above:
-```
-wwctl profile set --tagadd="server=<server_node>" rke2-agent
-```
-as well as the client token which is available in the file
-`/var/lib/rancher/rke2/server/node-token` on the server:
-```
-wwctl profile set --tagadd="clienttoken=$(ssh <server_node> 'cat /var/lib/rancher/rke2/server/node-token')" rke2-agent
-```
-Now, we add the profiles `rke2-agent`, `container-host` and
-`container-storage` to all the client nodes:
-```
-wwctl node set -P default,container-host,rke2-agent,container-storage <agent_nodes>
+wwctl node set -C leap15.6-RKE2 <agent_nodes>
 ```
 and rebuild the overlays for all agent nodes:
 ```
-wwctl overlay build <agent_nodes>
+wwctl overlay build $agents
 ```
-Again, replace `<server_node>` and `<agent_nodes>` by the  appropriate
-node names. `<agent_nodes>` represents the list of nodes we would like.
+We replace `<agent_nodes>` by the  appropriate node names.
 This can be a comma-seperated list, but also a range of nodes
 specified in squuare brackets - for example `k8s-agent[00-15]` would
 refer to `k8s-agent00` to `k8s-agent15` - or lists and ranges combined.
 
-Now, we need to make sure the node images are rebuilt:
-```
-wwctl overlay build <agent_node>
-```
-At this point, we are able to boot the first agent node. Once the node
+At this point, we are able to boot the first agent node. Once the first node
 is up, we may log in using `ssh` and check the status of the `rke2-agent`
 service:
 ```
@@ -356,8 +380,8 @@ Oct 07 19:23:59 k8s-agent01 systemd[1]: Started Rancher Kubernetes Engine v2 (ag
 Oct 07 19:24:25 k8s-agent01 rke2[1301]: time="2024-10-07T19:24:25Z" level=info
 msg="Tunnel authorizer set Kubelet Port 0.0.0.0:10250"
 ```
-This is all we check on the agent, any further verifications will be done from
-the server. We log into the server and run:
+This should be all we check on the agent. Any further verifications will be
+done from the server. We log into the server and run:
 ```
 kubectl get nodes
 ```
@@ -373,7 +397,7 @@ spin up more nodes and repeat the last step to verify they appear.
 
 # Conclusions
 We've  shown that it is possible to deploy a functional K8s cluster with
-RKE2 using Warewulf. We could for example proceed  deploying the NVIDIA GPU
+RKE2 using Warewulf. We could for example proceed deploying the NVIDIA GPU
 operator with a driver container on this cluster as described in a [previous
 Blog](https://e4t.github.io/nvidia/cuda/k8s/rke2/nvidia-gpu-operator/leap/2024/09/24/NVIDIA-GPU-Operator-on-oS-Leap.html)
 and set up a K8s cluster for AI workloads. Most of the steps were straight
