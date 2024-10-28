@@ -73,6 +73,9 @@ zypper -n in -y tar iptables awk
 cd /root
 curl -o rke2.sh -fsSL https://get.rke2.io
 ```
+`tar` and `awk` are required by the RKE2 install script while `iptables`
+is required by K8s to set up the container network.
+
 ### Image Preparation for Container Image Storage
 This step is optional, but it is advisable to set up a storage device to
 hold container images. Container image storage is required on every node
@@ -114,7 +117,7 @@ cd /root
 INSTALL_RKE2_SKIP_RELOAD=true INSTALL_RKE2_VERSION="v1.31.1+rke2r1" sh rke2.sh
 # Enable the service so it comes up later
 systemctl enable rke2-server
-# For many scenarios we want `helm`
+# For container deployment we want `helm`
 zypper -n in -y helm
 # Set up environment so kubectl and crictl are found and will run
 cat > /etc/profile.d/rke2.sh << EOF
