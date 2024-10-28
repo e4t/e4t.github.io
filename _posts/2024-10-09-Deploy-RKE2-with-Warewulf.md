@@ -26,7 +26,7 @@ next-generation Kubernetes distribution RKE2 using Warewulf.
 
 # Considerations
 
-## K8s Server
+## <a id="server_considerations"/>K8s Server
 
 In K8s we distinguish between a 'server' and 'agents'. While a 'server'
 may act as an agent as well, it is mainly to organize and control the
