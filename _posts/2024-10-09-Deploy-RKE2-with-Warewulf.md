@@ -49,6 +49,14 @@ be exhausted. Fortunately, warewulf is able to set up mass storage devices -
 optionally every time a node is started. We will show how to set up
 storage for container images using Warewulf.
 
+## Basic Setup
+
+This post will not cover how to perform the basic network setup required
+for the nodes to PXE-boot from the Warewulf deployment server or make
+nodes known to Warewulf. These topocs are all covered in [Christian's
+Blog](https://mslacken.github.io/2024/03/26/install-wartewulf4.html)
+already.
+
 # Setup
 
 ## Create Deployment Image
