@@ -151,7 +151,7 @@ you want to install as an agent.
    and <obtained token> by the agent token mentioned above.
 5. Now you are able to start the agent:
    ```
-   kubectl enable --now rke2-agent
+   sytemctl enable --now rke2-agent
    ```
 6. After a while you should see that the node is has been picked up
    by the server. Run:
