@@ -174,7 +174,7 @@ will be installed on any node that has a GPU installed.
 1. To simply configuration, create a file `/root/build-variables.sh` on the
    server node:
    ```
-   # cat > /root/build-variables.sh <<EOF
+   # cat > /root/build-variables.sh <<"EOF"
    export LEAP_MAJ="15"
    export LEAP_MIN="6"
    export DRIVER_VERSION="555.42.06"
