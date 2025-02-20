@@ -168,7 +168,7 @@ Since the K8s agents and servers need a shared secret - the connection
 token - and secondary nodes need information about the primary server
 to connect, we set up a warewulf configuration overlay template for
 these.  
-We vreate a new overlay `rke2-config` on the Warewulf deployment
+We create a new overlay `rke2-config` on the Warewulf deployment
 server by running:
 ```
 wwctl overlay create rke2-config
@@ -188,9 +188,9 @@ EOF
 <!-- {% endraw %} -->
 and import it into the overlay setting its owner and permission:
 ```
-wwctl overlay import --parents rke2-agent /tmp/config.yaml.ww /etc/rancher/rke2/config.yaml.ww
-wwctl overlay chown rke2-agent /etc/rancher/rke2/config.yaml.ww 0
-wwctl overlay chmod rke2-agent /etc/rancher/rke2/config.yaml.ww 0600
+wwctl overlay import --parents rke2-config /tmp/config.yaml.ww /etc/rancher/rke2/config.yaml.ww
+wwctl overlay chown rke2-config /etc/rancher/rke2/config.yaml.ww 0
+wwctl overlay chmod rke2-config /etc/rancher/rke2/config.yaml.ww 0600
 ```
 This template will create a `server:` entry pointing to the
 communication endpoint (address & port) of the primary K8s server
