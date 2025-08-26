@@ -177,8 +177,8 @@ will be installed on any node that has a GPU installed.
    # cat > /root/build-variables.sh <<"EOF"
    export LEAP_MAJ="15"
    export LEAP_MIN="6"
-   export DRIVER_VERSION="555.42.06"
-   export OPERATOR_VERSION="v24.6.1"
+   export DRIVER_VERSION="575.57.08"
+   export OPERATOR_VERSION="v25.3.2"
    export DRIVER_IMAGE=nvidia-driver-container
    export REGISTRY="registry.opensuse.org/network/cluster/containers/containers-${LEAP_MAJ}.${LEAP_MIN}"
    EOF
