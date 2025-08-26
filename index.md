@@ -1,5 +1,7 @@
 ---
 ---
+[Quick Guide: Deploy RKE2 in Warewulf](_posts/2025-08-26-RKE2-with-Warewulf-Quick.md)
+
 [Deploy a Kubernets Cluster (RKE2) with Warewulf](_posts/2024-10-09-Deploy-RKE2-with-Warewulf.md)
 
 [NVIDIA CUDA Runtime Installation on openSUSE Leap 15.6](_posts/2024-10-02-leap-CUDA.md)
