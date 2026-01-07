@@ -114,7 +114,7 @@ documentation](https://warewulf.org/docs/main/contents/disks.html) for
 details.
 ```
 wwctl profile add container-storage
-wwctl profile set --diskname /dev/sdb --diskwipe "true" \
+wwctl profile set --diskname /dev/sdb --diskwipe \
       --partnumber 1 --partcreate --partname container_storage \
       --fsname container_storage --fswipe --fsformat ext4 \
 	  --fspath /var/lib/rancher \
@@ -147,7 +147,7 @@ If applicable, set up the server node
 ```
 wwctl node set \
       -P default,container-host,container-storage,rke2-config-key \
-      -C leap15.6-RKE2-server ${server}
+      --image leap15.6-RKE2-server ${server}
 wwctl overlay build ${server}
 ```
 Now, we are ready to PXE-boot the first server.
@@ -156,11 +156,23 @@ We now configure the agent nodes and build the overlays:
 ```
 wwctl node set \
       -P default,container-host,container-storage,rke2-config-key,rke2-config-first-server \
-      -C leap15.6-RKE2-agent ${agents}
+      --image leap15.6-RKE2-agent ${agents}
 wwctl overlay build ${agents}
 ```
+
+# Start Up Nodes
+Now, we are ready to fire up our nodes. We assume that all nodes are
+presently turned off and configured to boot from PXE by default.
+First, turn on and boot the server:
+```
+wwctl power on ${server}
+```
 Once the first server node is up and running we can now start PXE-booting
-the agents. They should connect to the server automatically.
+the agents.
+```
+wwctl power on ${agents}
+```
+They should connect to the server automatically.
 
 # Check Node Status
 To check the status of the nodes, we connect to the server through
