@@ -40,8 +40,8 @@ cat > /tmp/rke2_environment.sh <<"EOF"
 server=<add the server node here>
 agents="<list of agents>"
 container_url=docker://registry.opensuse.org/network/cluster/containers/containers-15.6
-server_container=$container_url/warewulf-rke2-server:v1.32.7_rke2r1
-agent_container=$container_url/warewulf-rke2-agent:v1.32.7_rke2r1
+server_container=$container_url/warewulf-rke2-server:v1.34.3+rke2r1
+agent_container=$container_url/warewulf-rke2-agent:v1.34.3+rke2r1
 token="$(for n in {1..41}; do printf %2.2x $(($RANDOM & 0xff));done)"
 EOF
 ```
@@ -87,8 +87,8 @@ we've talked about the implications deploying K8s servers using Warewulf.
 If we plan to deploy the server using Warewulf as well, we pull the server
 container from the registry also  and build it:
 ```
-wwctl container import ${server_container} leap15.6-RKE2-server
-wwctl container build leap15.6-RKE2-server
+wwctl image import ${server_container} leap15.6-RKE2-server
+wwctl image build leap15.6-RKE2-server
 ```
 # Set up Profiles
 We utilize Warewulf profiles to configure different aspects of the setup
